@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from .agent import AgentOrchestrator
@@ -39,3 +39,10 @@ async def chat(request: dict[str, str]) -> dict[str, object]:
 
     reply, executed_plan = await agent.run(message)
     return {"reply": reply, "plan": executed_plan.to_dict()}
+
+
+@app.options("/chat", status_code=status.HTTP_204_NO_CONTENT)
+async def chat_preflight() -> Response:
+    # Explicitly handle browser preflight requests for environments where
+    # upstream layers don't forward automatic CORSMiddleware OPTIONS handling.
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
