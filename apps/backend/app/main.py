@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .agent import AgentOrchestrator
-from .models import ChatRequest, ChatResponse, MCPTool
 
 app = FastAPI(title="Agentic Chat Backend", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 agent = AgentOrchestrator()
 
 
@@ -15,19 +21,21 @@ async def health() -> dict[str, str]:
 
 
 @app.get("/mcp/tools")
-async def mcp_tools() -> dict[str, list[MCPTool]]:
+async def mcp_tools() -> dict[str, list[dict]]:
     tools = await agent.mcp_client.list_tools()
-    return {"tools": tools}
+    return {"tools": [tool.to_dict() for tool in tools]}
 
 
-@app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest) -> ChatResponse:
-    plan = await agent.plan(request.message)
-    executed_plan = await agent.execute(plan)
+@app.get("/chat")
+async def chat_usage() -> dict[str, str]:
+    return {"detail": "Use POST /chat with JSON body: {'message': '...'}"}
 
-    final_task = next(
-        (task for task in reversed(executed_plan.tasks) if task.title == "Summarize and respond"),
-        executed_plan.tasks[-1],
-    )
 
-    return ChatResponse(reply=str(final_task.result), plan=executed_plan)
+@app.post("/chat")
+async def chat(request: dict[str, str]) -> dict[str, object]:
+    message = request.get("message", "").strip()
+    if not message:
+        return {"reply": "Please provide a message.", "plan": {"goal": "", "tasks": []}}
+
+    reply, executed_plan = await agent.run(message)
+    return {"reply": reply, "plan": executed_plan.to_dict()}

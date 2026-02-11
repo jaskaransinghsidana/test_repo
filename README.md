@@ -3,8 +3,8 @@
 A local-first monorepo that contains:
 
 - **Modern chatbot UI** (React + Vite)
-- **Agentic backend** (FastAPI) that can **plan**, **create tasks**, and **execute** them
-- **Sample MCP server** exposing tools for calculator + mock web search
+- **Agentic backend** (FastAPI + LangGraph) that can **plan**, **create tasks**, **execute** them, and summarize with an LLM
+- **Sample FastMCP server** exposing tools for calculator + mock web search
 - **Docker Compose** for one-command local startup
 
 ## Monorepo structure
@@ -14,7 +14,7 @@ apps/
   backend/      # Agent API + planner/executor
   frontend/     # Chat interface + plan visualization
 services/
-  mcp-server/   # Sample MCP-like tool server
+  mcp-server/   # Sample FastMCP tool server (streamable HTTP)
 ```
 
 ## Run locally with Docker Compose
@@ -51,5 +51,5 @@ Backend:
 
 MCP server:
 - `GET /health`
-- `GET /tools`
-- `POST /tools/{tool_name}/invoke`
+- `GET /mcp/tools`
+- `POST /mcp/tools/{tool_name}/invoke`

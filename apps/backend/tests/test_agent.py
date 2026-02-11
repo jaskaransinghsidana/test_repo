@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import pytest
+import asyncio
 
 from app.agent import AgentOrchestrator
 from app.models import MCPTool
@@ -21,12 +21,13 @@ class FakeMCP:
         return "noop"
 
 
-@pytest.mark.asyncio
-async def test_plan_and_execute_uses_tools():
-    agent = AgentOrchestrator(mcp_client=FakeMCP())
-    plan = await agent.plan("research MCP and calculate 2 + 3")
-    executed = await agent.execute(plan)
+def test_plan_and_execute_uses_tools():
+    async def _run_test() -> None:
+        agent = AgentOrchestrator(mcp_client=FakeMCP())
+        reply, executed = await agent.run("research MCP and calculate 2 + 3")
 
-    calc_task = next(task for task in executed.tasks if task.tool_name == "calculator")
-    assert calc_task.result == 5
-    assert "Research findings" in str(executed.tasks[-1].result)
+        calc_task = next(task for task in executed.tasks if task.tool_name == "calculator")
+        assert calc_task.result == 5
+        assert "Research findings" in reply
+
+    asyncio.run(_run_test())

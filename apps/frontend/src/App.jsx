@@ -5,7 +5,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 function App() {
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState([
-    { role: 'assistant', content: 'Hi! I can plan tasks, use MCP tools, and execute agent workflows.' },
+    { role: 'assistant', content: 'Hi! I can plan tasks with LangGraph, use MCP tools, and summarize with an LLM.' },
   ]);
   const [plan, setPlan] = useState(null);
   const [tools, setTools] = useState([]);
