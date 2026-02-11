@@ -2,6 +2,38 @@ import { useEffect, useState } from 'react';
 
 const API_BASE = import.meta.env.VITE_API_BASE || '/api';
 
+const buildApiCandidates = (path) => {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const trimmedBase = API_BASE.replace(/\/+$/, '');
+  const candidates = [`${trimmedBase}${normalizedPath}`];
+
+  if (trimmedBase.endsWith('/api')) {
+    candidates.push(`${trimmedBase.slice(0, -4)}${normalizedPath}`);
+  }
+
+  return [...new Set(candidates)];
+};
+
+const fetchWithFallback = async (path, options) => {
+  const candidates = buildApiCandidates(path);
+  let lastResponse = null;
+
+  for (const url of candidates) {
+    const response = await fetch(url, options);
+    if (response.ok) {
+      return response;
+    }
+
+    if (response.status !== 404) {
+      return response;
+    }
+
+    lastResponse = response;
+  }
+
+  return lastResponse;
+};
+
 function App() {
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState([
@@ -12,8 +44,14 @@ function App() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch(`${API_BASE}/mcp/tools`)
-      .then((res) => res.json())
+    fetchWithFallback('/mcp/tools')
+      .then((res) => {
+        if (!res?.ok) {
+          throw new Error('Failed to load tools');
+        }
+
+        return res.json();
+      })
       .then((data) => setTools(data.tools || []))
       .catch(() => setTools([]));
   }, []);
@@ -28,11 +66,16 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/chat`, {
+      const response = await fetchWithFallback('/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage }),
       });
+
+      if (!response?.ok) {
+        throw new Error('Failed to send message');
+      }
+
       const data = await response.json();
       setHistory((prev) => [...prev, { role: 'assistant', content: data.reply }]);
       setPlan(data.plan);
