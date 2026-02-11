@@ -17,6 +17,39 @@ services/
   mcp-server/   # Sample FastMCP tool server (streamable HTTP)
 ```
 
+## Environment variables (.env)
+
+This repo reads runtime environment variables from a root `.env` file when running with Docker Compose.
+
+1. Copy the example file:
+
+```bash
+cp .env.example .env
+```
+
+2. Edit `.env` values as needed.
+
+A complete example is included in `.env.example`.
+
+### Backend (`apps/backend`)
+
+- `MCP_SERVER_URL` (default: `http://mcp-server:9000`)
+  - URL for the MCP service that exposes tools.
+- `CORS_ALLOWED_ORIGINS` (default: `http://localhost:5173,http://127.0.0.1:5173`)
+  - Comma-separated list of browser origins allowed to call backend APIs directly.
+- `OPENAI_API_KEY` (optional)
+  - If set, backend uses OpenAI for final answer summarization.
+- `OPENAI_MODEL` (default: `gpt-4o-mini`)
+  - Model used when `OPENAI_API_KEY` is set.
+
+### Frontend (`apps/frontend`)
+
+- `VITE_API_BASE` (recommended: `/api`)
+  - Base URL used by browser fetch calls.
+  - Use `/api` to keep requests same-origin via the Vite dev proxy and avoid CORS issues.
+- `VITE_PROXY_TARGET` (default in Docker Compose: `http://backend:8000`)
+  - Target for Vite's `/api` proxy.
+
 ## Run locally with Docker Compose
 
 ```bash
@@ -29,12 +62,14 @@ Services:
 - Backend API: http://localhost:8000
 - MCP server: http://localhost:9000
 
+## Avoiding CORS issues in local UI development
 
-### Avoiding CORS issues in local UI development
+By default, the frontend is configured to call `/api`, and Vite proxies `/api` to the backend.
+That keeps browser traffic same-origin from `http://localhost:5173` and prevents CORS failures.
 
-The frontend uses a Vite proxy by default (`/api -> http://backend:8000`) so browser requests are same-origin from `http://localhost:5173` and do not require CORS preflight handling in the browser path.
-
-If you override `VITE_API_BASE`, use a same-origin value when possible (for example `/api`) to avoid preflight/CORS errors in development.
+If you intentionally use a direct API URL (for example `VITE_API_BASE=http://localhost:8000`),
+set backend `CORS_ALLOWED_ORIGINS` to include your frontend origin (for example
+`http://localhost:5173`).
 
 ## Example prompt
 

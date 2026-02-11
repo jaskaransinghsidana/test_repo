@@ -3,5 +3,6 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install
 COPY . .
-ENV VITE_API_BASE=http://localhost:8000
+ENV VITE_API_BASE=/api
+ENV VITE_PROXY_TARGET=http://backend:8000
 CMD ["npm", "run", "dev"]
