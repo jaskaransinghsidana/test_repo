@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Response, status
+from fastapi import APIRouter, FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from .agent import AgentOrchestrator
@@ -11,6 +11,7 @@ from .agent import AgentOrchestrator
 load_dotenv()
 
 app = FastAPI(title="Agentic Chat Backend", version="0.1.0")
+api_router = APIRouter(prefix="/api")
 
 
 def _parse_cors_origins() -> list[str]:
@@ -34,17 +35,20 @@ async def health() -> dict[str, str]:
 
 
 @app.get("/mcp/tools")
+@api_router.get("/mcp/tools")
 async def mcp_tools() -> dict[str, list[dict]]:
     tools = await agent.mcp_client.list_tools()
     return {"tools": [tool.to_dict() for tool in tools]}
 
 
 @app.get("/chat")
+@api_router.get("/chat")
 async def chat_usage() -> dict[str, str]:
     return {"detail": "Use POST /chat with JSON body: {'message': '...'}"}
 
 
 @app.post("/chat")
+@api_router.post("/chat")
 async def chat(request: dict[str, str]) -> dict[str, object]:
     message = request.get("message", "").strip()
     if not message:
@@ -55,7 +59,11 @@ async def chat(request: dict[str, str]) -> dict[str, object]:
 
 
 @app.options("/chat", status_code=status.HTTP_204_NO_CONTENT)
+@api_router.options("/chat", status_code=status.HTTP_204_NO_CONTENT)
 async def chat_preflight() -> Response:
     # Explicitly handle browser preflight requests for environments where
     # upstream layers don't forward automatic CORSMiddleware OPTIONS handling.
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+app.include_router(api_router)
