@@ -29,6 +29,13 @@ Services:
 - Backend API: http://localhost:8000
 - MCP server: http://localhost:9000
 
+
+### Avoiding CORS issues in local UI development
+
+The frontend uses a Vite proxy by default (`/api -> http://backend:8000`) so browser requests are same-origin from `http://localhost:5173` and do not require CORS preflight handling in the browser path.
+
+If you override `VITE_API_BASE`, use a same-origin value when possible (for example `/api`) to avoid preflight/CORS errors in development.
+
 ## Example prompt
 
 Try in the UI:
