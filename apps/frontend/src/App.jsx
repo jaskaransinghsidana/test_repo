@@ -1,37 +1,10 @@
 import { useEffect, useState } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_BASE || '/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
 
-const buildApiCandidates = (path) => {
+const buildApiUrl = (path) => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  const trimmedBase = API_BASE.replace(/\/+$/, '');
-  const candidates = [`${trimmedBase}${normalizedPath}`];
-
-  if (trimmedBase.endsWith('/api')) {
-    candidates.push(`${trimmedBase.slice(0, -4)}${normalizedPath}`);
-  }
-
-  return [...new Set(candidates)];
-};
-
-const fetchWithFallback = async (path, options) => {
-  const candidates = buildApiCandidates(path);
-  let lastResponse = null;
-
-  for (const url of candidates) {
-    const response = await fetch(url, options);
-    if (response.ok) {
-      return response;
-    }
-
-    if (response.status !== 404) {
-      return response;
-    }
-
-    lastResponse = response;
-  }
-
-  return lastResponse;
+  return `${API_BASE.replace(/\/+$/, '')}${normalizedPath}`;
 };
 
 function App() {
@@ -44,7 +17,7 @@ function App() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchWithFallback('/mcp/tools')
+    fetch(buildApiUrl('/mcp/tools'))
       .then((res) => {
         if (!res?.ok) {
           throw new Error('Failed to load tools');
@@ -66,7 +39,7 @@ function App() {
     setLoading(true);
 
     try {
-      const response = await fetchWithFallback('/chat', {
+      const response = await fetch(buildApiUrl('/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userMessage }),
