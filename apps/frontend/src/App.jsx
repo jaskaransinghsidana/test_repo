@@ -9,7 +9,6 @@ function App() {
   ]);
   const [plan, setPlan] = useState(null);
   const [tools, setTools] = useState([]);
-  const [examples, setExamples] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -17,44 +16,28 @@ function App() {
       .then((res) => res.json())
       .then((data) => setTools(data.tools || []))
       .catch(() => setTools([]));
-
-    fetch(`${API_BASE}/mcp/examples`)
-      .then((res) => res.json())
-      .then((data) => setExamples(data.examples || []))
-      .catch(() => setExamples([]));
   }, []);
 
-  const sendMessage = async (event, presetMessage = null) => {
-    event?.preventDefault?.();
-    const outgoing = (presetMessage || message).trim();
-    if (!outgoing) return;
+  const sendMessage = async (event) => {
+    event.preventDefault();
+    if (!message.trim()) return;
 
-    if (!presetMessage) {
-      setMessage('');
-    }
-
-    setHistory((prev) => [...prev, { role: 'user', content: outgoing }]);
+    const userMessage = message.trim();
+    setMessage('');
+    setHistory((prev) => [...prev, { role: 'user', content: userMessage }]);
     setLoading(true);
 
     try {
       const response = await fetch(`${API_BASE}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: outgoing }),
+        body: JSON.stringify({ message: userMessage }),
       });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({}));
-        const detail = payload.detail || `Backend returned HTTP ${response.status}`;
-        throw new Error(detail);
-      }
-
       const data = await response.json();
       setHistory((prev) => [...prev, { role: 'assistant', content: data.reply }]);
       setPlan(data.plan);
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : 'Backend is unavailable.';
-      setHistory((prev) => [...prev, { role: 'assistant', content: `Request failed: ${detail}` }]);
+    } catch {
+      setHistory((prev) => [...prev, { role: 'assistant', content: 'Sorry, backend is unavailable.' }]);
     } finally {
       setLoading(false);
     }
@@ -72,28 +55,6 @@ function App() {
             </li>
           ))}
         </ul>
-
-        <h3>MCP Examples</h3>
-        {examples.length === 0 ? (
-          <p className="small-note">No examples available.</p>
-        ) : (
-          <ul className="examples-list">
-            {examples.map((example) => (
-              <li key={example.title}>
-                <strong>{example.title}</strong>
-                <p>{example.goal}</p>
-                <button
-                  type="button"
-                  className="example-btn"
-                  disabled={loading}
-                  onClick={(event) => sendMessage(event, example.chat_prompt)}
-                >
-                  Run: {example.chat_prompt}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
       </aside>
 
       <main className="chat-shell">

@@ -27,10 +27,3 @@ class MCPClient:
             response.raise_for_status()
         payload = response.json()
         return payload.get("result")
-
-    async def list_examples(self) -> list[dict[str, Any]]:
-        async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.get(f"{self.base_url}/examples")
-            response.raise_for_status()
-        payload = response.json()
-        return payload.get("examples", [])

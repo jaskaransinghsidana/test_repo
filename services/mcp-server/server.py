@@ -35,33 +35,6 @@ TOOLS = [
     },
 ]
 
-EXAMPLES = [
-    {
-        "title": "Calculator example",
-        "goal": "Compute a simple expression",
-        "tool_name": "calculator",
-        "arguments": {"a": 12, "b": 30, "operator": "+"},
-        "expected_result": 42,
-        "chat_prompt": "calculate 12 + 30",
-    },
-    {
-        "title": "Research example",
-        "goal": "Fetch MCP context snippets",
-        "tool_name": "web_search",
-        "arguments": {"query": "MCP workflow for agent planning"},
-        "expected_result": "list of mocked snippets",
-        "chat_prompt": "research MCP workflow for agent planning",
-    },
-    {
-        "title": "Combined agentic run",
-        "goal": "Use both tools inside one plan",
-        "tool_name": "multi_step",
-        "arguments": {"prompt": "research MCP workflow and calculate 12 + 30"},
-        "expected_result": "research snippets + math result in assistant summary",
-        "chat_prompt": "research MCP workflow and calculate 12 + 30",
-    },
-]
-
 
 @app.get("/health")
 def health() -> dict[str, str]:
@@ -71,11 +44,6 @@ def health() -> dict[str, str]:
 @app.get("/tools")
 def list_tools() -> dict[str, list[dict]]:
     return {"tools": TOOLS}
-
-
-@app.get("/examples")
-def list_examples() -> dict[str, list[dict]]:
-    return {"examples": EXAMPLES}
 
 
 @app.post("/tools/{tool_name}/invoke")
