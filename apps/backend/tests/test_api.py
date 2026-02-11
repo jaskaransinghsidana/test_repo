@@ -18,7 +18,7 @@ def test_chat_preflight_allows_frontend_origin() -> None:
     )
 
     assert response.status_code in (200, 204)
-    assert response.headers["access-control-allow-origin"] == "*"
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
 
 
 def test_chat_get_returns_usage_instead_of_405() -> None:
